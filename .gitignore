@@ -1,5 +1,9 @@
-# Local IP list
+# Local IP files
 ip-list.txt
+extract_data.sh
+
+# Data Folder
+pi_data/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
