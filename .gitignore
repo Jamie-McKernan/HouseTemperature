@@ -5,6 +5,9 @@ extract_data.sh
 # Data Folder
 pi_data/
 
+# VSCode
+.vscode/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
