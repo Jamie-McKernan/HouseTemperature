@@ -3,7 +3,8 @@ ip-list.txt
 extract_data.sh
 
 # Data Folder
-pi_data/
+pi_data_raw/
+images/
 
 # VSCode
 .vscode/

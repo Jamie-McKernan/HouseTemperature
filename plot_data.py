@@ -1,7 +1,11 @@
+import os
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
+
+from csv import reader
+
 
 # Constants
 COORDS = {
@@ -65,45 +69,85 @@ PI_LOCATIONS = {
     "nine": COORDS["cam_bedroom"]
 }
 
+DATA_FOLDER = "./pi_data_raw"
+IMAGE_OUTPUT_FOLDER = "./images"
 
 
-df = pd.read_csv("./pi_data/zero.csv")
 
-geo_data = []
+def plot_single_time(df, time_string):
+    geo_data = []
 
-# Add CSV data to list
-for index, row in df.iterrows():
-    for coord_set in PI_LOCATIONS[row["piid"]]:
-        geo_data.append((
-            row["temp"],
-            coord_set[0],
-            coord_set[1]
-        ))
+    # Add CSV data to list
+    for index, row in df.iterrows():
+        for coord_set in PI_LOCATIONS[row["piid"]]:
+            geo_data.append((
+                row["temp"],
+                coord_set[0],
+                coord_set[1]
+            ))
 
-# Make DataFrame from list
-columns = ["temp", "x", "y"]
-df = pd.DataFrame(geo_data, columns=columns)
+    # Make DataFrame from list
+    df = pd.DataFrame(geo_data, columns=["temp", "x", "y"])
 
-# Plot
-df = df.pivot_table("temp", "y", "x")
+    df = df.astype("float")
+
+    # Plot
+    df = df.pivot_table("temp", "y", "x")
 
 
-ax = sns.heatmap(
-    df,
-    # vmin=18,
-    # vmax=24,
-    cmap=sns.color_palette(
-        "coolwarm",
-        as_cmap=True
+    ax = sns.heatmap(
+        df,
+        vmin=18,
+        vmax=24,
+        cmap=sns.color_palette(
+            "coolwarm",
+            as_cmap=True
+        )
     )
-)
 
-ax.invert_yaxis()
-ax.set_aspect("equal")
+    plt.title(
+        f"{time_string[0:1]}:{time_string[2:]}",
+        y=1.3,
+        fontsize=23,
+        color="white"
+    )
 
-plt.axis("off")
-plt.savefig(
-    "test",
-    dpi=170,
-    facecolor=(0.55,0.55,0.55),
-)
+    ax.invert_yaxis()
+    ax.set_aspect("equal")
+
+    cax = plt.gcf().axes[-1]
+    cax.tick_params(labelsize=10, labelcolor="white", color="white")
+
+    plt.axis("off")
+    plt.savefig(
+        f"{IMAGE_OUTPUT_FOLDER}/{time_string}",
+        dpi=170,
+        facecolor=(0.5,0.5,0.5),
+    )
+    plt.clf()
+
+
+def plot_all_data():
+    all_time_loc_data = []
+
+    for csv_file in os.listdir(DATA_FOLDER):
+        with open(f"{DATA_FOLDER}/{csv_file}", 'r') as read_obj:
+            csv_reader = reader(read_obj)
+            header = next(csv_reader)
+            one_loc_data = [row for row in csv_reader]
+        all_time_loc_data += one_loc_data
+
+    df_all_data = pd.DataFrame(
+        all_time_loc_data,
+        columns=["piid", "time", "temp"]
+    )
+
+    for time_value in df_all_data.time.unique():
+        df_single_time = df_all_data.loc[
+            df_all_data["time"] == time_value
+        ]
+
+        plot_single_time(df_single_time, time_value)
+
+
+plot_all_data()
