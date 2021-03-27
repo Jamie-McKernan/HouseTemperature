@@ -1,10 +1,12 @@
 import os
+import datetime
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
 
 from csv import reader
+from random import randint
 
 
 # Constants
@@ -74,7 +76,7 @@ IMAGE_OUTPUT_FOLDER = "./images"
 
 
 
-def plot_single_time(df, time_string):
+def plot_single_time(df, time_string, min_temp, max_temp, img_number):
     geo_data = []
 
     # Add CSV data to list
@@ -97,8 +99,8 @@ def plot_single_time(df, time_string):
 
     ax = sns.heatmap(
         df,
-        vmin=18,
-        vmax=24,
+        vmin=float(min_temp),
+        vmax=float(max_temp),
         cmap=sns.color_palette(
             "coolwarm",
             as_cmap=True
@@ -106,7 +108,7 @@ def plot_single_time(df, time_string):
     )
 
     plt.title(
-        f"{time_string[0:1]}:{time_string[2:]}",
+        f"{time_string[0:2]}:{time_string[2:]}",
         y=1.3,
         fontsize=23,
         color="white"
@@ -120,14 +122,15 @@ def plot_single_time(df, time_string):
 
     plt.axis("off")
     plt.savefig(
-        f"{IMAGE_OUTPUT_FOLDER}/{time_string}",
-        dpi=170,
+        f"{IMAGE_OUTPUT_FOLDER}/{img_number}",
+        dpi=200,
         facecolor=(0.5,0.5,0.5),
     )
     plt.clf()
+    return
 
 
-def plot_all_data():
+def sort_all_data():
     all_time_loc_data = []
 
     for csv_file in os.listdir(DATA_FOLDER):
@@ -141,13 +144,85 @@ def plot_all_data():
         all_time_loc_data,
         columns=["piid", "time", "temp"]
     )
+    return df_all_data
 
-    for time_value in df_all_data.time.unique():
+
+def plot_all_data(df_all_data):
+    
+    min_temp = df_all_data["temp"].min()
+    max_temp = df_all_data["temp"].max()
+
+    for count, time_value in enumerate(df_all_data.time.unique()):
         df_single_time = df_all_data.loc[
             df_all_data["time"] == time_value
         ]
 
-        plot_single_time(df_single_time, time_value)
+        plot_single_time(
+            df_single_time,
+            time_value,
+            min_temp,
+            max_temp,
+            count
+        )
 
 
-plot_all_data()
+def random_data():
+
+    time_list = [
+        "0957",
+        "0958",
+        "0959",
+        "1000",
+        "1001",
+        "1002",
+        "1003",
+        "1004",
+        "1005",
+        "1006",
+        "1007",
+        "1008",
+        "1009",
+        "1010"
+    ]
+    piid_list = [
+        "zero",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+        "six",
+        "seven",
+        "eight",
+        "nine"
+    ]
+
+    random_data_list = []
+
+    for time in time_list:
+        for piid in piid_list:
+            random_data_list.append(
+                [piid, time, (randint(1900, 2100) / 100)]
+            )
+
+    return pd.DataFrame(
+        random_data_list,
+        columns=["piid", "time", "temp"]
+    )
+
+
+def make_video(framerate):
+    format_string = r"%01d"
+
+    os.system(
+        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" test.mp4'
+    )
+    return
+
+
+# all_data_sorted = sort_all_data()
+# plot_all_data(all_data_sorted)
+
+random_df = random_data()
+plot_all_data(random_df)
+make_video(5)
