@@ -20,10 +20,24 @@ except ImportError:
 bus = SMBus(1)
 bme280 = BME280(i2c_dev=bus)
 
+# get cpu temp
+def get_cpu_temperature():
+    with open("/sys/class/thermal/thermal_zone0/temp", "r") as f:
+        temp = f.read()
+        temp = int(temp) / 1000.0
+    return temp
 
 
 def get_temp():
-    return bme280.get_temperature()
+    factor = 2.25
+    cpu_temps = [get_cpu_temperature()] * 5
+    cpu_temp = get_cpu_temperature()
+    # Smooth out with some averaging to decrease jitter
+    cpu_temps = cpu_temps[1:] + [cpu_temp]
+    avg_cpu_temp = sum(cpu_temps) / float(len(cpu_temps))
+    raw_temp = bme280.get_temperature()
+    comp_temp = raw_temp - ((avg_cpu_temp - raw_temp) / factor)
+    return comp_temp
 
 
 def get_data_sample(data_samples_for_average):
