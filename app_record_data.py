@@ -1,3 +1,4 @@
+import os
 import csv
 import time
 import pause
@@ -31,6 +32,8 @@ def get_data_sample(data_samples_for_average):
 
 
 def record_data():
+
+    os.system("mkdir data")
 
     # static list of data types to record
     all_data_names = {
