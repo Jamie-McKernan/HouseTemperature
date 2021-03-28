@@ -5,9 +5,11 @@ extract_data.sh
 # Data Folder
 pi_data_raw/
 images/
+*.mp4
 
 # VSCode
 .vscode/
+*.code-workspace
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
