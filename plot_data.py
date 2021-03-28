@@ -1,11 +1,14 @@
 import os
 import datetime
+
+import progressbar
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import matplotlib.pylab as plt
 
-from csv import reader
+from multiprocessing import Pool
+import csv
 from random import randint
 
 
@@ -71,12 +74,14 @@ PI_LOCATIONS = {
     "nine": COORDS["cam_bedroom"]
 }
 
-DATA_FOLDER = "./pi_data_raw"
+DATA_FOLDER = "./fixed_old"
 IMAGE_OUTPUT_FOLDER = "./images"
 
 
+def plot_single_time(args):
 
-def plot_single_time(df, time_string, min_temp, max_temp, img_number):
+    df, time_string, min_temp, max_temp, img_number = args
+
     geo_data = []
 
     # Add CSV data to list
@@ -107,9 +112,10 @@ def plot_single_time(df, time_string, min_temp, max_temp, img_number):
         )
     )
 
+
     plt.title(
         f"{time_string[0:2]}:{time_string[2:]}",
-        y=1.3,
+        # y=1.3,
         fontsize=23,
         color="white"
     )
@@ -130,14 +136,14 @@ def plot_single_time(df, time_string, min_temp, max_temp, img_number):
     return
 
 
-def sort_all_data():
+def sort_all_data(data_type="temp"):
     all_time_loc_data = []
 
     for csv_file in os.listdir(DATA_FOLDER):
         with open(f"{DATA_FOLDER}/{csv_file}", 'r') as read_obj:
-            csv_reader = reader(read_obj)
-            header = next(csv_reader)
-            one_loc_data = [row for row in csv_reader]
+            csv_reader = csv.DictReader(read_obj)
+            one_loc_data = [[row["piid"], row["time"], row[data_type]] for row in csv_reader]
+
         all_time_loc_data += one_loc_data
 
     df_all_data = pd.DataFrame(
@@ -148,42 +154,62 @@ def sort_all_data():
 
 
 def plot_all_data(df_all_data):
-    
+
     min_temp = df_all_data["temp"].min()
     max_temp = df_all_data["temp"].max()
 
+    widgets = [
+        progressbar.Timer(format="%(elapsed)s"),
+        progressbar.Percentage(),
+        progressbar.Bar(marker="\x1b[32m█\x1b[39m"),
+        progressbar.ETA()
+    ]
+
+    list_of_arg_lists = []
+    # for count, time_value in enumerate(progressbar.progressbar(df_all_data.time.unique(), widgets=widgets)):
     for count, time_value in enumerate(df_all_data.time.unique()):
+
         df_single_time = df_all_data.loc[
             df_all_data["time"] == time_value
         ]
 
-        plot_single_time(
+        list_of_arg_lists.append([
             df_single_time,
             time_value,
             min_temp,
             max_temp,
             count
+        ])
+
+        # plot_single_time([
+        #     df_single_time,
+        #     time_value,
+        #     min_temp,
+        #     max_temp,
+        #     count
+        # ])
+
+    with Pool(processes=8) as pool:
+        r = list(
+            progressbar.progressbar(
+                pool.imap(
+                    plot_single_time,
+                    list_of_arg_lists
+                ), 
+                widgets=widgets, 
+                max_value=len(list_of_arg_lists)
+            )
         )
 
 
 def random_data():
 
-    time_list = [
-        "0957",
-        "0958",
-        "0959",
-        "1000",
-        "1001",
-        "1002",
-        "1003",
-        "1004",
-        "1005",
-        "1006",
-        "1007",
-        "1008",
-        "1009",
-        "1010"
-    ]
+    time_list = []
+
+    for i in range(24):
+        for j in range(60):
+            time_list.append(f"{str(i).zfill(2)}{str(j).zfill(2)}")
+
     piid_list = [
         "zero",
         "one",
@@ -198,11 +224,11 @@ def random_data():
     ]
 
     random_data_list = []
-
+    
     for time in time_list:
         for piid in piid_list:
             random_data_list.append(
-                [piid, time, (randint(1900, 2100) / 100)]
+                [piid, str(time), (randint(1900, 2100) / 100)]
             )
 
     return pd.DataFrame(
@@ -211,18 +237,24 @@ def random_data():
     )
 
 
-def make_video(framerate):
+def make_video(framerate, filename="video"):
     format_string = r"%01d"
 
     os.system(
-        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" test.mp4'
+        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" {filename}.mp4'
     )
     return
 
+DATA_METRIC = "temp"
 
-# all_data_sorted = sort_all_data()
+
+# Real data
+# all_data_sorted = sort_all_data(data_type=DATA_METRIC)
 # plot_all_data(all_data_sorted)
 
+
+# Random data
 random_df = random_data()
 plot_all_data(random_df)
-make_video(5)
+
+make_video(1, DATA_METRIC)
