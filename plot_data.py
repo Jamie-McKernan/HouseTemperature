@@ -241,7 +241,7 @@ def make_video(framerate, filename="video"):
     format_string = r"%01d"
 
     os.system(
-        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" {filename}.mp4'
+        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" ./outputs/{filename}.mp4'
     )
     return
 
@@ -254,7 +254,7 @@ DATA_METRIC = "temp"
 
 
 # Random data
-random_df = random_data()
-plot_all_data(random_df)
+# random_df = random_data()
+# plot_all_data(random_df)
 
 make_video(1, DATA_METRIC)
