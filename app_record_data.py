@@ -45,7 +45,7 @@ def record_data():
     with open("current_piid.txt", 'r') as piid_file:
         piid = piid_file.read()
 
-    with open(f"{piid}.csv", 'a') as csv_file:
+    with open(f"./data/{piid}.csv", 'a') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
         writer.writeheader()
 
@@ -65,7 +65,7 @@ def record_data():
         data_sample["piid"] = piid
         data_sample["time"] = time_string
         print("got data sample, now writing...")
-        with open(f"{piid}.csv", 'a') as csv_file:
+        with open(f"./data/{piid}.csv", 'a') as csv_file:
             writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
             writer.writerow(data_sample)
 
