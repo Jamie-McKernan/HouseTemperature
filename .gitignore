@@ -6,6 +6,7 @@ extract_data.sh
 pi_data_raw/
 images/
 outputs/
+.DS_Store
 
 # VSCode
 .vscode/
