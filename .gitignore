@@ -5,7 +5,7 @@ extract_data.sh
 # Data Folder
 pi_data_raw/
 images/
-*.mp4
+outputs/
 
 # VSCode
 .vscode/
