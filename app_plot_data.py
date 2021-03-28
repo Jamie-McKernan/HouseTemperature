@@ -201,7 +201,6 @@ def plot_all_data(df_all_data):
             )
         )
 
-
 def random_data():
 
     time_list = []
@@ -254,7 +253,7 @@ DATA_METRIC = "temp"
 
 
 # Random data
-# random_df = random_data()
-# plot_all_data(random_df)
+random_df = random_data()
+plot_all_data(random_df)
 
-make_video(1, DATA_METRIC)
+# make_video(60, DATA_METRIC)
