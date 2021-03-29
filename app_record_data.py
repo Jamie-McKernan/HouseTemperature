@@ -14,6 +14,13 @@ try:
 except ImportError:
     from smbus import SMBus
 
+try:
+    # Transitional fix for breaking change in LTR559
+    from ltr559 import LTR559
+    ltr559 = LTR559()
+except ImportError:
+    import ltr559
+
 ### Sensor Setup
 
 # temp
@@ -47,7 +54,10 @@ def get_data_sample(data_samples_for_average):
         data_samples_for_average[key] = []
 
     for _ in range(30):
-        data_samples_for_average["temp"].append(get_temp())
+        data_samples_for_average["temp(c)"].append(get_temp())
+        data_samples_for_average["pressure(hPa)"].append(bme280.get_pressure())
+        data_samples_for_average["humidity(%)"].append(bme280.get_humidity())
+        data_samples_for_average["light(lux)"].append(ltr559.get_lux())
         time.sleep(1)
 
     return_data = {}
@@ -64,7 +74,10 @@ def record_data():
 
     # static list of data types to record
     all_data_names = {
-        "temp": []
+        "temp(c)": [],
+        "pressure(hPa)": [],
+        "humidity(%)": [],
+        "light(lux)": []
     }
 
     # create csv header list
