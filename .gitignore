@@ -3,7 +3,7 @@ ip-list.txt
 extract_data.sh
 
 # Data Folder
-pi_data_raw/
+data/
 images/
 outputs/
 .DS_Store
