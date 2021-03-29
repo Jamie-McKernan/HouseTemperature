@@ -8,6 +8,7 @@ images/
 outputs/
 .DS_Store
 current_piid.txt
+multi-ssh.txt
 
 # VSCode
 .vscode/
