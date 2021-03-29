@@ -7,6 +7,7 @@ pi_data_raw/
 images/
 outputs/
 .DS_Store
+current_piid.txt
 
 # VSCode
 .vscode/
