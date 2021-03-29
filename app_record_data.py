@@ -53,10 +53,10 @@ def get_data_sample(data_samples_for_average):
     for key in data_samples_for_average.keys():
         data_samples_for_average[key] = []
 
-    for _ in range(30):
+    for _ in range(40):
         data_samples_for_average["temp(c)"].append(get_temp())
         data_samples_for_average["pressure(hPa)"].append(bme280.get_pressure())
-        data_samples_for_average["humidity(%)"].append(bme280.get_humidity())
+        data_samples_for_average["humidity(percent)"].append(bme280.get_humidity())
         data_samples_for_average["light(lux)"].append(ltr559.get_lux())
         time.sleep(1)
 
@@ -76,7 +76,7 @@ def record_data():
     all_data_names = {
         "temp(c)": [],
         "pressure(hPa)": [],
-        "humidity(%)": [],
+        "humidity(percent)": [],
         "light(lux)": []
     }
 
