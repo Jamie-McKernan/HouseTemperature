@@ -1,5 +1,7 @@
 import os
 import datetime
+import csv
+import random
 
 import progressbar
 import numpy as np
@@ -8,8 +10,11 @@ import seaborn as sns
 import matplotlib.pylab as plt
 
 from multiprocessing import Pool
-import csv
 from random import randint
+
+from matplotlib.colors import LinearSegmentedColormap
+
+# my_cmap = LinearSegmentedColormap.from_list('mycmap', [(0,0,1), (1,1,1), (1,0,0)])
 
 
 # Constants
@@ -77,10 +82,10 @@ PI_LOCATIONS = {
 DATA_FOLDER = "./data"
 IMAGE_OUTPUT_FOLDER = "./images"
 os.system(f"mkdir {IMAGE_OUTPUT_FOLDER}")
+os.system(f"mkdir outputs")
 
 def plot_single_time(args):
-
-    df, time_string, min_temp, max_temp, img_number = args
+    df, time_string, min_temp, max_temp, img_number, data_metric = args
 
     geo_data = []
 
@@ -88,7 +93,7 @@ def plot_single_time(args):
     for index, row in df.iterrows():
         for coord_set in PI_LOCATIONS[row["piid"]]:
             geo_data.append((
-                row["temp"],
+                row["rolling"],
                 coord_set[0],
                 coord_set[1]
             ))
@@ -106,16 +111,18 @@ def plot_single_time(args):
         df,
         vmin=float(min_temp),
         vmax=float(max_temp),
+        # cmap=my_cmap
         cmap=sns.color_palette(
             # "coolwarm",
             "magma",
             as_cmap=True
-        )
+        ),
+        # annot=True
     )
 
 
     plt.title(
-        f"{time_string[0:2]}:{time_string[2:]}",
+        f"{data_metric} -- {time_string[0:2]}:{time_string[2:]}",
         # y=1.3,
         fontsize=23,
         color="white"
@@ -129,7 +136,11 @@ def plot_single_time(args):
 
     plt.axis("off")
     plt.savefig(
-        f"{IMAGE_OUTPUT_FOLDER}/{img_number}",
+        (
+            f"{IMAGE_OUTPUT_FOLDER}/"
+            f"{data_metric.replace('(', '_').replace(')', '')}/"
+            f"{img_number}"
+        ),
         dpi=200,
         facecolor=(0.5,0.5,0.5),
     )
@@ -137,13 +148,13 @@ def plot_single_time(args):
     return
 
 
-def sort_all_data(data_type="temp"):
+def sort_all_data(data_type="temp(c)", rolling_window=1):
     all_time_loc_data = []
 
     for csv_file in os.listdir(DATA_FOLDER):
         with open(f"{DATA_FOLDER}/{csv_file}", 'r') as read_obj:
             csv_reader = csv.DictReader(read_obj)
-            one_loc_data = [[row["piid"], row["time"], row[data_type]] for row in csv_reader]
+            one_loc_data = [[row["piid"], row["time"], float(row[data_type])] for row in csv_reader]
 
         all_time_loc_data += one_loc_data
 
@@ -151,10 +162,14 @@ def sort_all_data(data_type="temp"):
         all_time_loc_data,
         columns=["piid", "time", "temp"]
     )
+
+    df_all_data["rolling"] = df_all_data["temp"].rolling(window=rolling_window).mean()
     return df_all_data
 
 
-def plot_all_data(df_all_data):
+def plot_all_data(df_all_data, data_metric="temp(c)"):
+    
+    os.system(f"mkdir ./{IMAGE_OUTPUT_FOLDER}/{data_metric.replace('(', '_').replace(')', '')}")
 
     min_temp = df_all_data["temp"].min()
     max_temp = df_all_data["temp"].max()
@@ -179,7 +194,8 @@ def plot_all_data(df_all_data):
             time_value,
             min_temp,
             max_temp,
-            count
+            count,
+            data_metric
         ])
 
         # plot_single_time([
@@ -201,6 +217,7 @@ def plot_all_data(df_all_data):
                 max_value=len(list_of_arg_lists)
             )
         )
+
 
 def random_data():
 
@@ -225,36 +242,77 @@ def random_data():
 
     random_data_list = []
     
-    for time in time_list:
-        for piid in piid_list:
+    random_constant = float(23)
+
+
+    for piid in piid_list:
+        continuous_value = False
+        for time in time_list:
+            if not continuous_value:
+                continuous_value = \
+                    random_constant + (random.choice([-1, 1]) * (randint(1, 100)/100))
+            else:
+                continuous_value += (random.choice([-1, 1]) * (randint(1, 100)/100))
+
+
             random_data_list.append(
-                [piid, str(time), (randint(1900, 2100) / 100)]
+                [piid, str(time), continuous_value]
             )
 
-    return pd.DataFrame(
+    random_df = pd.DataFrame(
         random_data_list,
         columns=["piid", "time", "temp"]
     )
 
+    random_df["rolling"] = random_df["temp"].rolling(window=15).mean()
 
-def make_video(framerate, filename="video"):
+    return random_df
+
+
+def make_video(framerate, filename="video", data_metric="temp(c)"):
     format_string = r"%01d"
 
+    filename = filename.replace("(", "_").replace(")", "")
+
     os.system(
-        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" -vcodec libx264 -pix_fmt yuv420p ./outputs/{filename}.mp4'
+        f'ffmpeg -framerate {framerate} -i "./images/{filename}/{format_string}.png" -vcodec libx264 -pix_fmt yuv420p ./outputs/{filename}.mp4'
     )
     return
 
-DATA_METRIC = "temp"
 
 
-# Real data
-# all_data_sorted = sort_all_data(data_type=DATA_METRIC)
-# plot_all_data(all_data_sorted)
+### Other Values
+
+# temp(c)
+# pressure(hPa) (earth is 985 on average)
+# humidity(percent)
+# light(lux)
+
+### Other Values
 
 
-# Random data
-# random_df = random_data()
-# plot_all_data(random_df)
 
-make_video(60, DATA_METRIC)
+DM_LIST = [
+    "temp(c)",
+    # "pressure(hPa)",
+    # "humidity(percent)",
+    # "light(lux)"
+]
+
+# DATA_METRIC = "light(lux)"
+
+for DATA_METRIC in DM_LIST:
+
+    ### Real data
+    # all_data_sorted = sort_all_data(
+    #     data_type=DATA_METRIC,
+    #     rolling_window=15
+    # )
+    # plot_all_data(all_data_sorted, DATA_METRIC)
+
+
+    ### Random data
+    random_df = random_data()
+    plot_all_data(random_df, "temp(c)")
+
+    make_video(25, DATA_METRIC)
