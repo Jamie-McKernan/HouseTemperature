@@ -85,8 +85,10 @@ def record_data():
     fieldnames = [key for key in all_data_names.keys()]
     fieldnames += static_fieldnames
 
-    with open("current_piid.txt", 'r') as piid_file:
-        piid = piid_file.read()
+    file_list = os.listdir()
+    for file_name in file_list:
+        if file_name.startswith("piid_"):
+            piid = file_name.split("_")[1]
 
     with open(f"./data/{piid}.csv", 'a') as csv_file:
         writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
