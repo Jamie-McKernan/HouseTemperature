@@ -74,9 +74,9 @@ PI_LOCATIONS = {
     "nine": COORDS["cam_bedroom"]
 }
 
-DATA_FOLDER = "./fixed_old"
+DATA_FOLDER = "./data"
 IMAGE_OUTPUT_FOLDER = "./images"
-
+os.system(f"mkdir {IMAGE_OUTPUT_FOLDER}")
 
 def plot_single_time(args):
 
@@ -107,7 +107,8 @@ def plot_single_time(args):
         vmin=float(min_temp),
         vmax=float(max_temp),
         cmap=sns.color_palette(
-            "coolwarm",
+            # "coolwarm",
+            "magma",
             as_cmap=True
         )
     )
@@ -240,7 +241,7 @@ def make_video(framerate, filename="video"):
     format_string = r"%01d"
 
     os.system(
-        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" ./outputs/{filename}.mp4'
+        f'ffmpeg -framerate {framerate} -i "./images/{format_string}.png" -vcodec libx264 -pix_fmt yuv420p ./outputs/{filename}.mp4'
     )
     return
 
@@ -253,7 +254,7 @@ DATA_METRIC = "temp"
 
 
 # Random data
-random_df = random_data()
-plot_all_data(random_df)
+# random_df = random_data()
+# plot_all_data(random_df)
 
-# make_video(60, DATA_METRIC)
+make_video(60, DATA_METRIC)
