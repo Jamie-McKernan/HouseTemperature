@@ -247,12 +247,13 @@ def random_data():
 
     for piid in piid_list:
         continuous_value = False
+        add_or_remove = random.choice([[-1, -1, -1, 1, 1, 1, 1, 1], [-1, -1, -1, -1, -1, 1, 1, 1]])
         for time in time_list:
             if not continuous_value:
                 continuous_value = \
-                    random_constant + (random.choice([-1, 1]) * (randint(1, 100)/100))
+                    random_constant + (random.choice(add_or_remove) * (randint(1, 50)/100))
             else:
-                continuous_value += (random.choice([-1, 1]) * (randint(1, 100)/100))
+                continuous_value += (random.choice(add_or_remove) * (randint(1, 50)/100))
 
 
             random_data_list.append(
@@ -294,9 +295,9 @@ def make_video(framerate, filename="video", data_metric="temp(c)"):
 
 DM_LIST = [
     "temp(c)",
-    # "pressure(hPa)",
-    # "humidity(percent)",
-    # "light(lux)"
+    "pressure(hPa)",
+    "humidity(percent)",
+    "light(lux)"
 ]
 
 # DATA_METRIC = "light(lux)"
@@ -304,15 +305,15 @@ DM_LIST = [
 for DATA_METRIC in DM_LIST:
 
     ### Real data
-    # all_data_sorted = sort_all_data(
-    #     data_type=DATA_METRIC,
-    #     rolling_window=15
-    # )
-    # plot_all_data(all_data_sorted, DATA_METRIC)
+    all_data_sorted = sort_all_data(
+        data_type=DATA_METRIC,
+        rolling_window=15
+    )
+    plot_all_data(all_data_sorted, DATA_METRIC)
 
 
     ### Random data
-    random_df = random_data()
-    plot_all_data(random_df, "temp(c)")
+    # random_df = random_data()
+    # plot_all_data(random_df, "temp(c)")
 
-    make_video(25, DATA_METRIC)
+    make_video(30, DATA_METRIC)
